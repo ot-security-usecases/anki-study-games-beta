@@ -1,0 +1,12 @@
+{
+  "name": "StudyPlay Beta",
+  "short_name": "StudyPlay",
+  "description": "Estudio tipo Anki con juegos y progreso local.",
+  "start_url": "./",
+  "display": "standalone",
+  "background_color": "#111016",
+  "theme_color": "#7c3aed",
+  "icons": [
+    {"src":"icon.svg","sizes":"any","type":"image/svg+xml","purpose":"any maskable"}
+  ]
+}
