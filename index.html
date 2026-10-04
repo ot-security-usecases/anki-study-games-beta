@@ -1,0 +1,147 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <meta name="theme-color" content="#7c3aed" />
+  <meta name="description" content="StudyPlay: estudio tipo Anki con juegos, progreso y soporte APKG." />
+  <title>StudyPlay Beta</title>
+  <link rel="manifest" href="manifest.json" />
+  <link rel="icon" href="icon.svg" type="image/svg+xml" />
+  <link rel="stylesheet" href="styles.css" />
+  <script defer src="https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/fzstd@0.1.1/umd/index.js"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/sql.js@1.10.3/dist/sql-wasm.js"></script>
+  <script defer src="app.js"></script>
+</head>
+<body>
+  <div id="app" class="app-shell">
+    <header class="topbar">
+      <div>
+        <p class="eyebrow">BETA</p>
+        <h1>StudyPlay</h1>
+        <p class="muted">Anki + juegos + progreso</p>
+      </div>
+      <button id="installBtn" class="icon-btn hidden" type="button" aria-label="Instalar aplicación">⬇️</button>
+    </header>
+
+    <main>
+      <section id="homeScreen" class="screen active">
+        <div class="hero-card">
+          <div class="hero-row">
+            <div>
+              <p class="eyebrow">MAZO ACTIVO</p>
+              <h2 id="activeDeckName">Demo · English Expressions</h2>
+              <p id="activeDeckMeta" class="muted">12 tarjetas · datos de prueba</p>
+            </div>
+            <div class="streak-pill">🔥 <span id="streakValue">1</span></div>
+          </div>
+          <div class="progress-line"><span id="masteryBar" style="width: 0%"></span></div>
+          <div class="stat-row">
+            <span>⭐ <b id="xpValue">0</b> XP</span>
+            <span>✅ <b id="correctValue">0</b></span>
+            <span>🎯 <b id="accuracyValue">0%</b></span>
+          </div>
+        </div>
+
+        <div class="section-head">
+          <div>
+            <p class="eyebrow">JUGAR</p>
+            <h2>Elige un modo</h2>
+          </div>
+          <button id="mixedSessionBtn" class="text-btn" type="button">🎲 Sesión mixta</button>
+        </div>
+
+        <div id="gameGrid" class="game-grid"></div>
+
+        <div class="section-head">
+          <div>
+            <p class="eyebrow">CONTENIDO</p>
+            <h2>Lecciones / mazos</h2>
+          </div>
+        </div>
+        <div id="deckList" class="deck-list"></div>
+      </section>
+
+      <section id="importScreen" class="screen">
+        <div class="section-head">
+          <div>
+            <p class="eyebrow">IMPORTAR</p>
+            <h2>Trae tus tarjetas</h2>
+          </div>
+        </div>
+
+        <label class="drop-zone" for="fileInput">
+          <span class="drop-icon">📦</span>
+          <strong>Selecciona un archivo</strong>
+          <span>.apkg · .colpkg · .txt</span>
+          <small>Los archivos se procesan en tu dispositivo.</small>
+        </label>
+        <input id="fileInput" class="sr-only" type="file" accept=".apkg,.colpkg,.txt,text/plain" />
+
+        <div id="importStatus" class="status-card hidden" role="status" aria-live="polite"></div>
+        <div id="importPreview" class="hidden"></div>
+
+        <details class="info-box">
+          <summary>Compatibilidad beta</summary>
+          <ul>
+            <li>✅ Anki moderno <code>collection.anki21b</code></li>
+            <li>✅ Anki clásico <code>collection.anki2/.anki21</code></li>
+            <li>✅ Notes/Cards en TXT tabulado</li>
+            <li>✅ Decks, subdecks, tags y campos</li>
+            <li>✅ Referencias a imágenes y audio</li>
+            <li>⚠️ Plantillas Anki con JavaScript/CSS complejo pueden verse diferente</li>
+          </ul>
+        </details>
+      </section>
+
+      <section id="progressScreen" class="screen">
+        <div class="section-head">
+          <div>
+            <p class="eyebrow">PROGRESO</p>
+            <h2>Tu aprendizaje</h2>
+          </div>
+          <button id="resetProgressBtn" class="text-btn danger" type="button">Reiniciar</button>
+        </div>
+        <div class="stats-grid">
+          <div class="mini-card"><b id="pReviews">0</b><span>Respuestas</span></div>
+          <div class="mini-card"><b id="pAccuracy">0%</b><span>Precisión</span></div>
+          <div class="mini-card"><b id="pMastered">0</b><span>Dominadas</span></div>
+          <div class="mini-card"><b id="pXp">0</b><span>XP</span></div>
+        </div>
+        <div class="panel">
+          <h3>Estado de las tarjetas</h3>
+          <div class="mastery-legend">
+            <div><span class="dot new"></span>Nuevas <b id="newCount">0</b></div>
+            <div><span class="dot learning"></span>Aprendiendo <b id="learningCount">0</b></div>
+            <div><span class="dot mastered"></span>Dominadas <b id="masteredCount">0</b></div>
+          </div>
+        </div>
+        <div class="panel">
+          <h3>Más difíciles</h3>
+          <div id="hardestList" class="hard-list"></div>
+        </div>
+      </section>
+
+      <section id="playScreen" class="screen">
+        <div class="play-head">
+          <button id="exitGameBtn" class="icon-btn" type="button" aria-label="Salir del juego">←</button>
+          <div class="play-title-wrap">
+            <p id="gameEyebrow" class="eyebrow">JUEGO</p>
+            <h2 id="gameTitle">Flashcards</h2>
+          </div>
+          <div id="gameCounter" class="counter-pill">1/10</div>
+        </div>
+        <div id="gameArea" class="game-area"></div>
+        <div id="gameFeedback" class="game-feedback" aria-live="polite"></div>
+      </section>
+    </main>
+
+    <nav class="bottom-nav" aria-label="Navegación principal">
+      <button data-screen="home" class="nav-btn active" type="button"><span>🏠</span>Inicio</button>
+      <button data-screen="import" class="nav-btn" type="button"><span>📥</span>Importar</button>
+      <button data-screen="progress" class="nav-btn" type="button"><span>📊</span>Progreso</button>
+    </nav>
+  </div>
+</body>
+</html>
